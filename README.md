@@ -95,7 +95,19 @@ rm -rf ~/.skillscope      # optional: delete collected data
 
 A timestamped backup of `settings.json` is written before every modification, so you can always roll back by hand.
 
+## Known limitations
+
+Documented honestly so you can trust the numbers (full decision log in [ASSUMPTIONS.md](ASSUMPTIONS.md)):
+
+- **Read-based detection can over-count.** Any `Read` of a `SKILL.md` counts as a fire, including Claude reading one while you edit a skill. If you author skills, your own fire counts will run slightly hot. A filter is planned ([TODO](TODO.md)).
+- Token numbers are estimates (`chars / 4`), not exact tokenizer counts.
+- Two skills with the same name in different scopes currently collapse into one row.
+- Uninstalled skills stay in the dashboard until you delete the DB (`prune` command planned).
+- Installed via `npx`? The hook points at the npx cache; prefer `npm i -g` so cache cleanup can't remove the collector.
+
 ## Roadmap
+
+Short-term work is tracked in [TODO.md](TODO.md). Bigger ideas:
 
 - Optional cloud dashboard for teams
 - Team view: aggregate skill usage across engineers
