@@ -1,0 +1,9 @@
+{
+  "session_id": "sess-fixture-002",
+  "transcript_path": "/home/demo/.claude/projects/demo/transcript.jsonl",
+  "cwd": "/home/demo/projects/web",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Read",
+  "tool_input": { "file_path": "/home/demo/.claude/skills/pr-reviewer/SKILL.md" },
+  "tool_response": { "type": "text" }
+}
