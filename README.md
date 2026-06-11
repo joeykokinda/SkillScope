@@ -103,6 +103,24 @@ A timestamped backup of `settings.json` is written before every modification, so
 - Skill A/B insights: which description phrasings actually get a skill triggered
 - `skillscope prune`: one command to remove dead-weight skills
 
+## FAQ
+
+### How do I see which Claude Code skills are actually being used?
+
+Run `npx skillscope init` once, use Claude Code normally, then `skillscope dashboard`. Every skill invocation is recorded locally, so the dashboard shows fires per skill, sessions where it fired, and last-fired time. Anything that has never fired lands in the dead-weight table.
+
+### How much context do my skills cost?
+
+Each installed skill injects its name and description into every session (the "metadata tax"), and its full SKILL.md when it fires. SkillScope estimates both as `chars / 4` tokens and shows cost per load, per-session tax, and total estimated tokens consumed per skill.
+
+### Does SkillScope send my data anywhere?
+
+No. There are no network calls in the collector, the database is a local SQLite file, and prompt text is never read or stored. The only external fetch anywhere is the dashboard page loading Chart.js from a CDN.
+
+### Which Claude Code hooks does it use?
+
+`PostToolUse` (matcher `Skill|Read`), `SessionStart`, `SessionEnd`, and `UserPromptSubmit`, merged into `~/.claude/settings.json` with a timestamped backup. `skillscope uninstall` removes them surgically.
+
 ## License
 
 [MIT](LICENSE)
