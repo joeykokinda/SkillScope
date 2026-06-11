@@ -1,0 +1,41 @@
+{
+  "name": "skillscope",
+  "version": "0.1.0",
+  "description": "Skill observability for Claude Code. See which of your skills actually fire, what they cost in context, and which are dead weight.",
+  "license": "MIT",
+  "bin": {
+    "skillscope": "src/cli.js"
+  },
+  "main": "src/cli.js",
+  "scripts": {
+    "test": "node test/run-tests.js",
+    "seed": "node scripts/seed-demo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "skills",
+    "agent",
+    "observability",
+    "analytics",
+    "hooks",
+    "telemetry",
+    "local-first"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeykokinda/SkillScope.git"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ]
+}
