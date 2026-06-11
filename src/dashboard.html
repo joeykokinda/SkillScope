@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillScope</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121826;
+    --panel-border: #1e2738;
+    --text: #e6e9f0;
+    --muted: #8b94a7;
+    --accent: #5ee0a0;
+    --accent2: #6ea8fe;
+    --danger: #ff5d6c;
+    --warn: #ffb454;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 70% -10%, #16203a 0%, var(--bg) 55%);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding: 32px 24px 64px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  header h1 { font-size: 26px; margin: 0; letter-spacing: -0.5px; }
+  header h1 .scope { color: var(--accent); }
+  header .tag { color: var(--muted); font-size: 13px; }
+  .sub { color: var(--muted); margin: 0 0 28px; font-size: 14px; }
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat .value { font-size: 38px; font-weight: 700; letter-spacing: -1px; margin-top: 4px; }
+  .stat .value.red { color: var(--danger); }
+  .stat .value.green { color: var(--accent); }
+  .stat .value.blue { color: var(--accent2); }
+  .stat .value.amber { color: var(--warn); }
+  .stat .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  section { margin-bottom: 28px; }
+  section h2 { font-size: 16px; margin: 0 0 12px; color: var(--text); }
+  section h2 .note { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  .skill-name { font-weight: 600; }
+  .desc { color: var(--muted); font-size: 12.5px; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; border: 1px solid var(--panel-border); color: var(--muted);
+  }
+  .pill.user { color: var(--accent2); border-color: #2b4470; }
+  .pill.project { color: var(--accent); border-color: #2a5746; }
+  .pill.plugin { color: var(--warn); border-color: #5e4524; }
+  .pill.demo { color: #c792ea; border-color: #4a3a5e; }
+  .wasted { color: var(--danger); font-weight: 600; }
+  .empty { color: var(--muted); padding: 18px; text-align: center; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .charts { grid-template-columns: 1fr; } }
+  .chart-card { height: 300px; position: relative; }
+  .chart-card canvas { position: absolute; inset: 18px 20px; width: calc(100% - 40px) !important; height: calc(100% - 36px) !important; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 36px; text-align: center; }
+  footer a { color: var(--accent2); text-decoration: none; }
+  #error { display: none; background: #3a1620; border: 1px solid #6e2433; color: #ffb3bc; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Skill<span class="scope">Scope</span></h1>
+    <span class="tag">skill observability for Claude Code · 100% local</span>
+  </header>
+  <p class="sub">Which skills actually fire, what they cost, and what is dead weight.</p>
+
+  <div id="error"></div>
+
+  <div class="hero">
+    <div class="card stat">
+      <div class="label">Skills installed</div>
+      <div class="value blue" id="stat-installed">–</div>
+      <div class="hint">user + project + plugin</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Never fired</div>
+      <div class="value red" id="stat-never">–</div>
+      <div class="hint" id="stat-never-pct">&nbsp;</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Skill fires (30d)</div>
+      <div class="value green" id="stat-fires">–</div>
+      <div class="hint" id="stat-sessions">&nbsp;</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Metadata tax / session</div>
+      <div class="value amber" id="stat-tax">–</div>
+      <div class="hint">est. tokens loaded every session</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Dead weight <span class="note">never fired, sorted by what they cost you anyway</span></h2>
+    <div class="card" style="padding: 6px 0;">
+      <table id="dead-table">
+        <thead>
+          <tr><th>Skill</th><th>Scope</th><th>Description</th><th class="num">Context wasted / session</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="dead-empty" style="display:none">No dead weight. Every skill has fired at least once. 🎉</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="charts">
+      <div class="card chart-card">
+        <h2 style="margin:0">Most used <span class="note">fires, last 30 days</span></h2>
+        <canvas id="chart-most-used" style="top: 46px; height: calc(100% - 64px) !important;"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h2 style="margin:0">Activity <span class="note">skill fires per day, last 30 days</span></h2>
+        <canvas id="chart-activity" style="top: 46px; height: calc(100% - 64px) !important;"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>All skills</h2>
+    <div class="card" style="padding: 6px 0; overflow-x: auto;">
+      <table id="skills-table">
+        <thead>
+          <tr>
+            <th>Skill</th><th>Scope</th>
+            <th class="num">Fires</th>
+            <th class="num">Sessions w/ fire</th>
+            <th>Last fired</th>
+            <th class="num">Cost / load</th>
+            <th class="num">Total est. tokens</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="skills-empty" style="display:none">No skills found yet. Run <code>skillscope init</code> and use Claude Code.</div>
+    </div>
+  </section>
+
+  <footer>
+    SkillScope · all data stays on this machine · prompt text is never stored ·
+    <a href="https://github.com/joeykokinda/SkillScope">GitHub</a>
+  </footer>
+</div>
+
+<script>
+const fmt = (n) => n >= 10000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+const fmtTokens = (n) => '~' + fmt(n);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago = (ts) => {
+  if (!ts) return '<span style="color:var(--muted)">never</span>';
+  const d = Date.now() - ts;
+  const days = Math.floor(d / 86400000);
+  if (days > 0) return days + 'd ago';
+  const hours = Math.floor(d / 3600000);
+  if (hours > 0) return hours + 'h ago';
+  return Math.max(1, Math.floor(d / 60000)) + 'm ago';
+};
+const pill = (scope) => `<span class="pill ${esc(scope)}">${esc(scope)}</span>`;
+
+async function load() {
+  let stats;
+  try {
+    const response = await fetch('/api/stats');
+    stats = await response.json();
+    if (stats.error) throw new Error(stats.error);
+  } catch (error) {
+    const box = document.getElementById('error');
+    box.textContent = 'Failed to load stats: ' + error.message;
+    box.style.display = 'block';
+    return;
+  }
+  const { totals } = stats;
+
+  document.getElementById('stat-installed').textContent = totals.skills_installed;
+  document.getElementById('stat-never').textContent = totals.skills_never_fired;
+  document.getElementById('stat-never-pct').textContent = totals.skills_installed
+    ? Math.round(totals.skills_never_fired / totals.skills_installed * 100) + '% of your skills have never fired'
+    : '';
+  document.getElementById('stat-fires').textContent = fmt(totals.total_fires_30d);
+  document.getElementById('stat-sessions').textContent = totals.sessions_observed + ' sessions observed';
+  document.getElementById('stat-tax').textContent = fmtTokens(totals.metadata_tax_per_session_tokens);
+
+  // Dead weight table
+  const deadBody = document.querySelector('#dead-table tbody');
+  if (stats.dead_weight.length === 0) {
+    document.getElementById('dead-table').style.display = 'none';
+    document.getElementById('dead-empty').style.display = 'block';
+  } else {
+    deadBody.innerHTML = stats.dead_weight.map((s) => `
+      <tr>
+        <td class="skill-name">${esc(s.name)}</td>
+        <td>${pill(s.scope)}</td>
+        <td class="desc" title="${esc(s.description)}">${esc(s.description)}</td>
+        <td class="num wasted">${fmtTokens(s.metadata_tax_tokens)} tokens</td>
+      </tr>`).join('');
+  }
+
+  // All skills table
+  const skillsBody = document.querySelector('#skills-table tbody');
+  if (stats.skills.length === 0) {
+    document.getElementById('skills-table').style.display = 'none';
+    document.getElementById('skills-empty').style.display = 'block';
+  } else {
+    const sorted = [...stats.skills].sort((a, b) => b.fires - a.fires || a.name.localeCompare(b.name));
+    skillsBody.innerHTML = sorted.map((s) => `
+      <tr>
+        <td><span class="skill-name">${esc(s.name)}</span><div class="desc" title="${esc(s.description)}">${esc(s.description)}</div></td>
+        <td>${pill(s.scope)}</td>
+        <td class="num">${fmt(s.fires)}</td>
+        <td class="num">${fmt(s.sessions_with_fire)}</td>
+        <td>${ago(s.last_fired)}</td>
+        <td class="num">${fmtTokens(s.cost_per_load_tokens)}</td>
+        <td class="num">${fmtTokens(s.total_tokens_consumed)}</td>
+      </tr>`).join('');
+  }
+
+  // Charts
+  Chart.defaults.color = '#8b94a7';
+  Chart.defaults.borderColor = '#1e2738';
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+
+  new Chart(document.getElementById('chart-most-used'), {
+    type: 'bar',
+    data: {
+      labels: stats.most_used_30d.map((s) => s.name),
+      datasets: [{
+        data: stats.most_used_30d.map((s) => s.fires_30d),
+        backgroundColor: '#5ee0a0cc',
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#1e2738' }, ticks: { precision: 0 } }, y: { grid: { display: false } } },
+    },
+  });
+
+  new Chart(document.getElementById('chart-activity'), {
+    type: 'line',
+    data: {
+      labels: stats.activity.map((d) => d.day.slice(5)),
+      datasets: [{
+        data: stats.activity.map((d) => d.fires),
+        borderColor: '#6ea8fe',
+        backgroundColor: '#6ea8fe22',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+      }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#1e2738' }, ticks: { precision: 0 } } },
+    },
+  });
+}
+load();
+</script>
+</body>
+</html>
