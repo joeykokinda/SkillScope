@@ -18,13 +18,19 @@ SkillScope closes the loop. It hooks into Claude Code's hooks system and tells y
 ## Install
 
 ```sh
-git clone https://github.com/joeykokinda/SkillScope.git
-cd SkillScope
-npm install
-node src/cli.js init     # or: npx skillscope init (once published)
+npx skillscope init
 ```
 
 That's it. Use Claude Code normally. Events collect silently in the background.
+
+The hook points at the installed copy of the collector, so for a long-lived setup prefer a global install (npx cache cleanup would otherwise remove it):
+
+```sh
+npm install -g skillscope
+skillscope init
+```
+
+Hacking on it instead? `git clone https://github.com/joeykokinda/SkillScope.git && cd SkillScope && npm install`, then `node src/cli.js <cmd>`.
 
 ## Commands
 

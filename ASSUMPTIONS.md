@@ -45,4 +45,4 @@ Decision log from the initial build.
 ## Repo
 
 - Repo directory is `skillscope` under `~/Projects/ai`; the GitHub remote uses the provided `joeykokinda/SkillScope` URL.
-- No npm publish performed; `npx skillscope` works once someone publishes the package, README says "once published".
+- Published to npm as `skillscope@0.1.0` (unscoped name was free). `init` writes the absolute path of whichever copy ran it into settings.json, so `npx` installs can break if the npx cache is pruned; README recommends `npm i -g` for durable setups.
