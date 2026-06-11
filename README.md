@@ -1,9 +1,12 @@
 # SkillScope
 
+[![npm](https://img.shields.io/npm/v/skillscope)](https://www.npmjs.com/package/skillscope)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](package.json)
 
 **Google Analytics for your Claude Code skills.** See which skills actually fire, what they cost in context, and which ones are dead weight.
+
+![SkillScope dashboard](https://raw.githubusercontent.com/joeykokinda/SkillScope/main/docs/dashboard.png)
 
 ## Why
 

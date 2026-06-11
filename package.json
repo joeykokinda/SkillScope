@@ -1,6 +1,6 @@
 {
   "name": "skillscope",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Skill observability for Claude Code. See which of your skills actually fire, what they cost in context, and which are dead weight.",
   "license": "MIT",
   "bin": {
